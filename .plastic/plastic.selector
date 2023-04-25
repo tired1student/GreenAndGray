@@ -1,0 +1,4 @@
+repository "GreenAndGray@wechat_os_qy03sukfx4-lxqwugyjkqnkoe@cloud.cn"
+  path "/"
+    br "/main"
+    co "/main"
