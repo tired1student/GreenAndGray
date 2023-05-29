@@ -5,15 +5,19 @@ using UnityEngine.SceneManagement;
 
 public class BirdControll : MonoBehaviour
 {
-    public Rigidbody2D rb;
-    
+    private Rigidbody2D rb;
+
+    [SerializeField]
     private float speed = 1.5f;
+    [SerializeField]
     private float jumpforce = 1;
-    public bool isDeath = false;
+
+    private bool isDeath = false;
 
     // Start is called before the first frame update
     void Start()
     {
+        rb = GetComponent<Rigidbody2D>();
     }
 
     // Update is called once per frame
