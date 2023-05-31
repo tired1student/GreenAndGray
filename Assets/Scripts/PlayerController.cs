@@ -5,29 +5,30 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    public static bool isDialogue = false;
+    //角色的组件
+    private Rigidbody2D rb;
+    private Animator anim;
+    public GameObject bag;//背包的UI界面
+    public GameObject dialogue;//对话框
+    public Inventory playerBag;
+
+    public static bool isDialogue = false;//角色是否处于对话状态中
 
     private bool bagIsOpen = false;
-    private bool farmer = false;
     private bool dir = false, lastDir = false;//true为水平移动，false为竖直运动
-
-    public GameObject bag;
-    public GameObject dialogue;
  
     //角色的运动属性
     [SerializeField] private float speed = 5;
     private float moveBoundary = 0;
 
-    //角色的组件
-    private Rigidbody2D rb;
-    private Collider2D col;
-    private Animator anim;
+    //是否触发与对应npc的对话
+    public static bool leader = false;
+    public static bool farmer = false;
 
     // Start is called before the first frame update
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
-        col = GetComponent<Collider2D>();
         anim = GetComponent<Animator>();
     }
 
@@ -42,14 +43,48 @@ public class PlayerController : MonoBehaviour
             CheckBag();
         }
 
+        StoryProgress();
+
         Dialogue();
     }
 
+    //随着故事的进展更改参数
+    private void StoryProgress()
+    {
+        if (DialogueSystem.ploughCount == 8 && DialogueSystem.digging)
+        {
+            DialogueSystem.digEnd = true;
+        }
+
+        foreach (Item i in playerBag.itemList)
+        {
+            if (i.itemName == "Shovel")
+            {
+                DialogueSystem.shovelGet = 1;
+            }
+
+            if (i.itemName == "RobotPart1" && !DialogueSystem.part1Get)
+            {
+                DialogueSystem.part1Get = true;
+                dialogue.SetActive(true);
+            }
+        }
+    }
+
+    //检测与人物的对话
     private void Dialogue()
     {
-        if (farmer && Input.GetKeyDown(KeyCode.E))
+        if (Input.GetKeyDown(KeyCode.E))
         {
-            dialogue.SetActive(true);
+            if (leader)
+            {
+                dialogue.SetActive(true);
+            }
+
+            if (farmer && DialogueSystem.digBegin)
+            {
+                dialogue.SetActive(true);
+            }
         }
     }
 
@@ -81,7 +116,10 @@ public class PlayerController : MonoBehaviour
         if (horizontalMove == 0 && verticalMove == 0)
         {
             rb.velocity = new Vector2(0, 0);
-            SetAnimtorPara(true, horizontalMove, verticalMove);
+            anim.SetBool("IsIdle", true);
+            anim.SetFloat("HorizontalMove", horizontalMove);
+            anim.SetFloat("VerticalMove", verticalMove);
+            //此处不能改变动画控制器中方向参数的值
         }
 
         //当两个方向键同时按住时让fx为最后方向lastfx的相反，达成后按生效
@@ -105,22 +143,14 @@ public class PlayerController : MonoBehaviour
             if (horizontalMove > moveBoundary)
             {
                 rb.velocity = new Vector2(speed, 0);
-                SetAnimtorPara(false, horizontalMove, verticalMove);
-                anim.SetBool("Right", true);
-                anim.SetBool("Forward", false);
-                anim.SetBool("Back", false);
-                anim.SetBool("Left", false);
+                SetAnimtorPara(false, horizontalMove, verticalMove, false, false, false, true);
             }
 
             //向左
             if (horizontalMove < -moveBoundary)
             {
                 rb.velocity = new Vector2(-speed, 0);
-                SetAnimtorPara(false, horizontalMove, verticalMove);
-                anim.SetBool("Left", true);
-                anim.SetBool("Forward", false);
-                anim.SetBool("Back", false);
-                anim.SetBool("Right", false);
+                SetAnimtorPara(false, horizontalMove, verticalMove, false, false, true, false);
             }
         }
 
@@ -130,11 +160,7 @@ public class PlayerController : MonoBehaviour
             if (verticalMove > moveBoundary)
             {
                 rb.velocity = new Vector2(0, speed);
-                SetAnimtorPara(false, horizontalMove, verticalMove);
-                anim.SetBool("Back", true);
-                anim.SetBool("Forward", false);
-                anim.SetBool("Left", false);
-                anim.SetBool("Right", false);
+                SetAnimtorPara(false, horizontalMove, verticalMove, false, true, false, false);
 
             }
 
@@ -142,21 +168,22 @@ public class PlayerController : MonoBehaviour
             if (verticalMove < -moveBoundary)
             {
                 rb.velocity = new Vector2(0, -speed);
-                SetAnimtorPara(false, horizontalMove, verticalMove);
-                anim.SetBool("Forward", true);
-                anim.SetBool("Back", false);
-                anim.SetBool("Left", false);
-                anim.SetBool("Right", false);
+                SetAnimtorPara(false, horizontalMove, verticalMove, true, false, false, false);
             }
         }
     }
 
     //便于传递参数到动画控制器的函数
-    private void SetAnimtorPara(bool isIdle, float horizontalMove, float verticalMove)
+    private void SetAnimtorPara(bool isIdle, float horizontalMove, float verticalMove, bool forward, bool back, bool left, bool right)
     {
         anim.SetBool("IsIdle", isIdle);
         anim.SetFloat("HorizontalMove", horizontalMove);
         anim.SetFloat("VerticalMove", verticalMove);
+        anim.SetBool("Forward", forward);
+        anim.SetBool("Back", back);
+        anim.SetBool("Left", left);
+        anim.SetBool("Right", right);
+
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
@@ -187,6 +214,11 @@ public class PlayerController : MonoBehaviour
         {
             farmer = true;
         }
+
+        if (collision.gameObject.name == "Leader")
+        {
+            leader = true;
+        }
     }
 
     private void OnCollisionExit2D(Collision2D collision)
@@ -194,6 +226,11 @@ public class PlayerController : MonoBehaviour
         if (collision.gameObject.name == "Farmer")
         {
             farmer = false;
+        }
+
+        if (collision.gameObject.name == "Leader")
+        {
+            leader = false;
         }
     }
 }

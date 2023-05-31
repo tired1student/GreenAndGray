@@ -9,8 +9,11 @@ public class Slot : MonoBehaviour
     public Item slotItem;
     public Text slotAmount;
 
+    public static string itemName = "";
+
     public void ItemOnClick()
     {
         InventoryManager.UpdateItemInformation(slotItem.itemInfo);
+        itemName = slotItem.itemName;
     }
 }

@@ -12,10 +12,16 @@ public class DialogueSystem : MonoBehaviour
     public Image faceImage;
 
     [Header("文本文件")]
-    public TextAsset farmer;
+    public TextAsset leader1;
+    public TextAsset leader2;
+    public TextAsset farmer1;
+    public TextAsset farmer2;
+    public TextAsset farmer3;
+    public TextAsset player1;
 
     [Header("头像")]
     public Sprite playerA;
+    public Sprite leaderB;
     public Sprite farmerD;
 
     private int index;//当前输出文字的行的坐标
@@ -23,17 +29,86 @@ public class DialogueSystem : MonoBehaviour
     private bool cancelTyping = false;//是否跳过文字的输出动画
     private List<string> textList = new List<string> ();
 
+    private bool player1Once = false;
+
     [SerializeField]
     private float textSpeed = 0.1f;
+
+    //剧情进展
+    public static bool leaderdia1 = true;//true表示第一次谈话，false表示第二次谈话
+    public static bool digBegin = false;
+    public static bool digging = false;
+    public static bool digEnd = false;
+    public static int ploughCount = 0;
+    public static int shovelGet = -1;//-1表示不可触发获得铲子的事件，0表示可以，1表示已经触发
+    public static bool part1Get = false;
 
     private void OnEnable()
     {
         PlayerController.isDialogue = true;
         textFinished = true;
 
-        GetTextFromFile(farmer);
+        ChooseRightText();
 
         StartCoroutine(SetTextUI());
+    }
+
+    private void ChooseRightText()
+    {
+        PlayerAndLeader();
+
+        PlayerAndFarmer();
+
+        PlayerSelf();
+    }
+
+    private void PlayerAndLeader()
+    {
+        if (!leaderdia1 && PlayerController.leader)
+        {
+            GetTextFromFile(leader2);
+        }
+
+        if (leaderdia1 && PlayerController.leader)
+        {
+            leaderdia1 = false;
+            digBegin = true;
+            GetTextFromFile(leader1);
+        }
+    }
+
+    //控制玩家的独白
+    private void PlayerSelf()
+    {
+        if (part1Get && !player1Once)
+        {
+            GetTextFromFile(player1);
+            player1Once = true;
+        }
+    }
+
+    //控制与农夫的三次对话
+    private void PlayerAndFarmer()
+    {
+        if (digEnd && PlayerController.farmer)
+        {
+            GetTextFromFile(farmer3);
+            if (shovelGet == -1)//耕完地之后还未与农夫对话
+            {
+                shovelGet = 0;//对话后可以获得铲子
+            }
+        }
+
+        if (digging && !digEnd && PlayerController.farmer)
+        {
+            GetTextFromFile(farmer2);
+        }
+
+        if (digBegin && !digging && PlayerController.farmer)
+        {
+            GetTextFromFile(farmer1);
+            digging = true;
+        }
     }
 
     // Update is called once per frame
@@ -56,8 +131,6 @@ public class DialogueSystem : MonoBehaviour
                 }
 
                 StartCoroutine(SetTextUI());
-                /*textLabel.text = textList[index];
-                index++;*/
             }
         }
     }
@@ -85,6 +158,11 @@ public class DialogueSystem : MonoBehaviour
         {
             case "A\r":
                 faceImage.sprite = playerA;
+                index++;
+                break;
+
+            case "B\r":
+                faceImage.sprite = leaderB;
                 index++;
                 break;
 

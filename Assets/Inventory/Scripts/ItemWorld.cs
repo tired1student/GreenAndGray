@@ -13,21 +13,21 @@ public class ItemWorld : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Player"))
         {
-            AddItem();
+            AddItem(item, playerBag);
             Destroy(gameObject);
         }
     }
 
-    private void AddItem()
+    public static void AddItem(Item item, Inventory bag)
     {
         //修改背包中的物品信息
-        if (playerBag.itemList.Contains(item))
+        if (bag.itemList.Contains(item))
         {
-            playerBag.itemAmountList[playerBag.itemList.IndexOf(item)] += 1;
+            bag.itemAmountList[bag.itemList.IndexOf(item)] += 1;
         } else
         {
-            playerBag.itemList.Add(item);
-            playerBag.itemAmountList.Add(1);
+            bag.itemList.Add(item);
+            bag.itemAmountList.Add(1);
         }
 
         //将背包中的物品信息更新到UI中显示

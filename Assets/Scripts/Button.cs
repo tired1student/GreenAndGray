@@ -5,16 +5,14 @@ using UnityEngine.SceneManagement;
 
 public class Button : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+    public static bool useButton = false;//只有点击的一瞬间是true
 
-    // Update is called once per frame
-    void Update()
+    private void Update()
     {
-        
+        if (useButton)
+        {
+            useButton = false;
+        }
     }
 
     public void GameStart()
@@ -27,5 +25,10 @@ public class Button : MonoBehaviour
         UnityEditor.EditorApplication.isPlaying = false;
 
         //Application.Quit();
+    }
+
+    public void UseActive()
+    {
+        useButton = true;
     }
 }
