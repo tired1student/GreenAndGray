@@ -21,7 +21,7 @@ public class PlayerController : MonoBehaviour
  
     //角色的运动属性
     [SerializeField] private float speed = 5;
-    private float moveBoundary = 0;
+    private float moveBoundary = 0.15f;
 
     //是否触发与对应npc的对话
     public static bool leader = false;
@@ -120,12 +120,12 @@ public class PlayerController : MonoBehaviour
     //控制角色的移动以及移动时的动画转变
     private void Movement()
     {
-        float horizontalMove, verticalMove;
+        float horizontalMove = 0, verticalMove = 0;
         horizontalMove = Input.GetAxis("Horizontal");
         verticalMove = Input.GetAxis("Vertical");
-        
-        //如果角色处于对话状态中，强制停止移动
-        if (isDialogue)
+
+        //如果角色处于对话或旁白状态中，强制停止移动
+        if (isDialogue || isVoiceOver)
         {
             horizontalMove = 0;
             verticalMove = 0;
